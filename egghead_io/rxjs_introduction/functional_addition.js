@@ -16,9 +16,10 @@ var source = Rx.Observable.interval(400).take(9)
     .map(i => ['1', '3', '4', 'foo', '5', 'bar', '2', '4'][i]);
 
 var result = source
-    .map(num => Number(num))
-    .filter(num => !isNaN(num))
-    .reduce((a, b) => a + b);
+  .map(x => parseInt(x))
+  .filter(x => !isNaN(x))
+  .reduce((x, y) => x + y);
+
 
 result.subscribe(x => console.log(x)); 
 
