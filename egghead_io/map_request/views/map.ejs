@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width">
+		<title>Google map</title>
+		<link rel="stylesheet" href="main.css">
+	</head>
+	<body>
+    <h3>My Google Maps Demo</h3>
+    <h1>map page<h1>
+    <div id="map"></div>
+    <% urls.forEach(function(url) { %>
+      <img src='<%= url %>'>
+    <% }); %>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="common.js"></script>
+  </body>
+</html>
