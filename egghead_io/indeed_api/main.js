@@ -1,12 +1,25 @@
-var searchTerm = 'ruby on rails';
-
+var searchTerm = 'web+developer';
 var state = 'CA';
+var pageStart = 0;
+var totalResults = 0;
 
-var url = 'http://api.indeed.com/ads/apisearch?publisher=8829908049153205&format=json&q=title%3A%28' + searchTerm + '%29&l=' + state + '&limit=25&start=0&userip=1.2.3.4&useragent=Mozilla/%2F4.0%28Firefox%29&v=2';
 
-var requestStream1 = Rx.Observable.of(url);
+function url(searchTerm, state, pageStart) {
+  return 'http://api.indeed.com/ads/apisearch?publisher=8829908049153205&format=json&q=title%3A%28' + searchTerm + '%29&l=' + state + '&limit=25&start=' + pageStart + '&userip=1.2.3.4&useragent=Mozilla/%2F4.0%28Firefox%29&v=2';
+}
 
-var responseStream1 = requestStream1
+var refreshButton = document.querySelector('.refresh');
+
+var refreshClickStream = Rx.Observable.fromEvent(refreshButton, 'click');
+var startupRequestStream1 = Rx.Observable.of(url(searchTerm, state, pageStart));
+
+var requestOnRefreshStream = refreshClickStream
+  .map(ev => {
+    // randomOffset = Math.floor(Math.random() * (totalResults / 25));
+    return url(searchTerm, state, randomOffset);
+  });
+
+var responseStream1 = startupRequestStream1.merge(refreshClickStream)
   .flatMap(requestUrl => 
     Rx.Observable.fromPromise(jQuery.getJSON(requestUrl))
   );
@@ -18,7 +31,9 @@ function createBaseResponseStream(responseStream1) {
 function createRandomJobStream(responseStream1) {
   return responseStream1.map(response =>
     response.results[Math.floor(Math.random()*response.results.length)]
-  );
+  )
+  .startWith(null)
+  .merge(refreshClickStream.map(ev => null));
 }
 
 var baseResponseStream = createBaseResponseStream(responseStream1);
@@ -31,26 +46,28 @@ var randomJob5Stream = createRandomJobStream(responseStream1);
 var randomJob6Stream = createRandomJobStream(responseStream1);
 
 baseResponseStream.subscribe(response => {
+  totalResults = response.totalResults;
   console.log(response.totalResults); 
 });
 
-function printJob(response) {
-  console.log('**********') 
-  console.log('company     : ', response.company);
-  console.log('city        : ', response.city);
-  console.log('job title   : ', response.jobtitle);
-  console.log('description : ', response.snippet);
-  console.log('url         : ', response.url);
+randomJob1Stream.subscribe(response => renderSuggestion(response, '.job1'));
+randomJob2Stream.subscribe(response => renderSuggestion(response, '.job2'));
+randomJob3Stream.subscribe(response => renderSuggestion(response, '.job3'));
+randomJob4Stream.subscribe(response => renderSuggestion(response, '.job4'));
+randomJob5Stream.subscribe(response => renderSuggestion(response, '.job5'));
+randomJob6Stream.subscribe(response => renderSuggestion(response, '.job6'));
+
+function renderSuggestion(response, selector) {
+  var tableRow = document.querySelector(selector);
+  if (response === null) {
+    tableRow.style.visibility = 'hidden';
+  } else {
+    tableRow.style.visibility = 'visible';
+    tableRow.querySelector('a').textContent = response.company;
+    tableRow.querySelector('a').href = response.url;
+    tableRow.querySelector('.city').textContent = response.city;
+    tableRow.querySelector('.company').textContent = response.jobtitle;
+    tableRow.querySelector('.snippet').textContent = response.snippet;
+  }
 }
 
-randomJob1Stream.subscribe(response => printJob(response));
-randomJob2Stream.subscribe(response => printJob(response));
-randomJob3Stream.subscribe(response => printJob(response));
-randomJob4Stream.subscribe(response => printJob(response));
-randomJob5Stream.subscribe(response => printJob(response));
-randomJob6Stream.subscribe(response => printJob(response));
-
-var refreshButton = document.querySelector('.refresh');
-
-refreshButton.addEventListener('click', function() { 
-});
